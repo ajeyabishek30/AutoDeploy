@@ -13,7 +13,7 @@ let nextId = 1;
 
 // Home endpoint
 app.get("/", (req, res) => {
-  res.send("Hello from AutoDeploy!");
+  res.send("Welcome to AutoDeploy Version 2!");
 });
 
 // Health check endpoint
