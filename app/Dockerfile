@@ -1,6 +1,8 @@
 
 FROM node:24-bookworm-slim
 
+LABEL org.opencontainers.image.source="https://github.com/ajeyabishek30/AutoDeploy"
+
 WORKDIR /app
 
 COPY package*.json ./
