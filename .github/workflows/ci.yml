@@ -19,10 +19,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: npm
@@ -39,4 +39,40 @@ jobs:
       - name: Build Docker image
         run: docker build -t autodeploy-api:ci ./app
 
-        
+      - name: Start test container
+        run: |
+          docker run -d \
+            --name autodeploy-ci-test \
+            autodeploy-api:ci
+
+      - name: Verify container health
+        run: |
+          for i in $(seq 1 15); do
+            STATUS=$(docker inspect \
+              --format '{{.State.Health.Status}}' \
+              autodeploy-ci-test)
+
+            echo "Health status: $STATUS"
+
+            if [ "$STATUS" = "healthy" ]; then
+              echo "Container health check passed!"
+              exit 0
+            fi
+
+            if [ "$STATUS" = "unhealthy" ]; then
+              echo "Container is unhealthy!"
+              docker logs autodeploy-ci-test
+              exit 1
+            fi
+
+            sleep 5
+          done
+
+          echo "Container health check timed out!"
+          docker logs autodeploy-ci-test
+          exit 1
+
+      - name: Clean up test container
+        if: always()
+        run: |
+          docker rm -f autodeploy-ci-test || true
